@@ -4,24 +4,39 @@
       <div class="country-code-wrapper">
         <!-- flags -->
         <div class="country-code__flag">
-          <div>
-            <img src="../assets/imgs/arrow-down.svg" alt="" />
+          <div v-if="showFlag" class="flag-container">
+            <country-flag country="cn" :size="size" />
           </div>
         </div>
         <input
           ref="countrycodeInput"
           class="country-code__input"
           type="text"
-          placeholder=""
+          placeholder="country code"
           :readonly="readonly"
           @input="handleInput"
           @focus="handleFocus"
           @blur="handleBlur"
           @change="handleChange"
         />
-        <span class="country-code__arrow">
-          <img src="../assets/imgs/arrow-down.svg" alt="" />
+        <span class="country-code__arrow" @click="handleToggle">
+          <img
+            :style="
+              `transform: rotate(${
+                toggle ? '180deg' : '0deg'
+              }); transition: transform .3s;`
+            "
+            src="../assets/imgs/arrow.svg"
+            alt=""
+          />
         </span>
+        <!-- country code list -->
+        <div class="country-code__list">
+          <!-- <ul class="country-code__list-items">
+            <li>1</li>
+            <li>2</li>
+          </ul> -->
+        </div>
       </div>
       <div class="fence"></div>
       <div class="phone-number-wrapper">
@@ -32,10 +47,28 @@
 </template>
 
 <script>
+import "../assets/styles/flags.css";
+import CountryFlag from "vue-country-flag";
+
 export default {
   name: "VuePhoneInput",
+  components: {
+    CountryFlag
+  },
   props: {
     value: [String, Number],
+    showFlag: {
+      type: Boolean,
+      default: true
+    },
+    isRound: {
+      type: Boolean,
+      default: false
+    },
+    size: {
+      type: String,
+      default: "normal"
+    },
     readonly: Boolean,
     disabled: Boolean,
     theme: {
@@ -43,7 +76,14 @@ export default {
     }
   },
   data() {
-    return {};
+    return {
+      toggle: false
+    };
+  },
+  computed: {
+    flagIconClass() {
+      return "iti-flag-small iti-flag cn";
+    }
   },
   methods: {
     handleInput(event) {
@@ -61,6 +101,10 @@ export default {
     },
     handleChange(event) {
       this.$emit("change", event.target.value);
+    },
+    handleToggle() {
+      this.toggle = !this.toggle;
+      console.log("testing ...", this.toggle);
     }
   }
 };
@@ -81,10 +125,11 @@ export default {
       // flag
       .country-code__flag {
         position: absolute;
-        img {
+        line-height: 40px;
+        .flag-container {
           position: relative;
-          top: 12px;
-          left: -50px;
+          top: 5px;
+          left: -52px;
         }
       }
       // input
@@ -92,14 +137,32 @@ export default {
         max-width: 120px;
         padding: 0 0 0 40px;
       }
+      .country-code__input::placeholder {
+        color: #c0c4cc;
+      }
       // arrow
       .country-code__arrow {
         display: flex;
         justify-content: center;
         img {
           display: inline-block;
-          padding: 0 10px;
+          padding: 0 5px;
         }
+      }
+      // country list
+      .country-code__list {
+        position: absolute;
+        // .country-code__list-items {
+        //   position: relative;
+        //   background: red;
+        //   top: 40px;
+        //   right: -100px;
+        //   border: 1px solid #e4e7ed;
+        //   background-color: #fff;
+        //   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        //   box-sizing: border-box;
+        //   width: 348px;
+        // }
       }
     }
     .fence {
@@ -108,7 +171,7 @@ export default {
       background: #dcdfe6;
     }
     .phone-number-wrapper {
-      // background-color: green;
+      color: #606266;
     }
   }
 }

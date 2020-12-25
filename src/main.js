@@ -1,6 +1,7 @@
 import Vue from "vue";
 import App from "./App.vue";
 import "./assets/styles/common.scss";
+import "./assets/styles/flags.css";
 
 Vue.config.productionTip = false;
 
