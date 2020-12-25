@@ -12,7 +12,7 @@
           ref="countrycodeInput"
           class="country-code__input"
           type="text"
-          placeholder="country code"
+          placeholder="Country Code"
           :readonly="readonly"
           @input="handleInput"
           @focus="handleFocus"
@@ -31,11 +31,17 @@
           />
         </span>
         <!-- country code list -->
-        <div class="country-code__list">
-          <!-- <ul class="country-code__list-items">
-            <li>1</li>
-            <li>2</li>
-          </ul> -->
+        <div ref="country-code" class="country-code__list">
+          <Transition name="toggle">
+            <RecycleScroller
+              class="scroller"
+              :items="countryCodes"
+              :item-size="20"
+              key-field="iso2"
+            >
+              123
+            </RecycleScroller>
+          </Transition>
         </div>
       </div>
       <div class="fence"></div>
@@ -49,11 +55,14 @@
 <script>
 import "../assets/styles/flags.css";
 import CountryFlag from "vue-country-flag";
+import { RecycleScroller } from "vue-virtual-scroller";
 
 export default {
   name: "VuePhoneInput",
   components: {
-    CountryFlag
+    CountryFlag,
+    // eslint-disable-next-line vue/no-unused-components
+    RecycleScroller
   },
   props: {
     value: [String, Number],
@@ -125,20 +134,24 @@ export default {
       // flag
       .country-code__flag {
         position: absolute;
+        pointer-events: none;
         line-height: 40px;
+        pointer-events: none;
         .flag-container {
           position: relative;
           top: 5px;
-          left: -52px;
+          right: 52px;
         }
       }
       // input
       .country-code__input {
         max-width: 120px;
         padding: 0 0 0 40px;
+        cursor: pointer;
       }
       .country-code__input::placeholder {
         color: #c0c4cc;
+        font-size: 12px;
       }
       // arrow
       .country-code__arrow {
