@@ -30,24 +30,24 @@
             alt=""
           />
         </span>
-        <!-- country code list -->
-        <div ref="country-code" class="country-code__list">
-          <Transition name="toggle">
-            <RecycleScroller
-              class="scroller"
-              :items="countryCodes"
-              :item-size="20"
-              key-field="iso2"
-            >
-              123
-            </RecycleScroller>
-          </Transition>
-        </div>
       </div>
       <div class="fence"></div>
       <div class="phone-number-wrapper">
         <input class="phone-number" type="number" placeholder="" />
       </div>
+    </div>
+    <!-- country code dropdown list -->
+    <div ref="country-code" class="country-code__list">
+      <Transition name="toggle">
+        <RecycleScroller
+          class="scroller"
+          :items="countryCodes"
+          :item-size="20"
+          key-field="iso2"
+        >
+          123
+        </RecycleScroller>
+      </Transition>
     </div>
   </div>
 </template>
