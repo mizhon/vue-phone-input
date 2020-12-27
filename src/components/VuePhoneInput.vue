@@ -5,15 +5,16 @@
         <!-- flags -->
         <div class="country-code__flag">
           <div v-if="showFlag" class="flag-container">
-            <country-flag country="cn" :size="size" />
+            <country-flag :country="defaultISOCode" :size="size" />
           </div>
         </div>
         <input
           ref="countrycodeInput"
-          class="country-code__input"
+          class="country-code__input inner-input"
           type="text"
           placeholder="Country Code"
           :readonly="readonly"
+          v-model="currentDialCode"
           @input="handleInput"
           @focus="handleFocus"
           @blur="handleBlur"
@@ -33,12 +34,16 @@
       </div>
       <div class="fence"></div>
       <div class="phone-number-wrapper">
-        <input class="phone-number__input" type="number" placeholder="" />
+        <input
+          type="number"
+          class="phone-number__input inner-input"
+          placeholder="Phone Number"
+        />
       </div>
     </div>
     <!-- country code dropdown list -->
-    <div class="country-code-container" v-show="toggle">
-      <transition>
+    <transition name="slide">
+      <div class="country-code-container" v-if="toggle">
         <recycle-scroller
           class="scroller"
           :items="countries"
@@ -46,7 +51,11 @@
           key-field="iso2"
         >
           <template v-slot="{ item }">
-            <div class="country-code__list">
+            <div
+              class="country-code__list"
+              @click="handleCountrySelected(item)"
+            >
+              <country-flag :country="item.iso2" :size="size" class="flag" />
               <div class="dial-code">
                 {{ item.dialCode }}
               </div>
@@ -56,13 +65,12 @@
             </div>
           </template>
         </recycle-scroller>
-      </transition>
-    </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
-// import "../assets/styles/flags.css";
 import CountryFlag from "vue-country-flag";
 import { RecycleScroller } from "vue-virtual-scroller";
 import { countries } from "../assets/js/country-codes.js";
@@ -71,7 +79,6 @@ export default {
   name: "VuePhoneInput",
   components: {
     CountryFlag,
-    // eslint-disable-next-line vue/no-unused-components
     RecycleScroller
   },
   props: {
@@ -97,34 +104,41 @@ export default {
   data() {
     return {
       toggle: false,
-      countries
+      countries,
+      defaultISOCode: "cn",
+      currentDialCode: "86"
     };
   },
-  computed: {
-    flagIconClass() {
-      return "iti-flag-small iti-flag cn";
-    }
-  },
+  computed: {},
   methods: {
     handleInput(event) {
       console.log("input triggered: -->", event);
       this.$emit("input", event.target.value);
     },
     handleFocus() {
+      console.log("focus", event);
       this.focused = true;
+      this.toggle = true;
       this.$emit("focus", event);
     },
     handleBlur(event) {
       console.log(event);
       this.focused = false;
+      this.toggle = !this.toggle;
       this.$emit("blur", event);
     },
     handleChange(event) {
       this.$emit("change", event.target.value);
     },
     handleToggle() {
-      this.toggle = !this.toggle;
       console.log("testing ...", this.toggle);
+      this.toggle = !this.toggle;
+    },
+    handleCountrySelected(item) {
+      console.log("country selected", item.iso2);
+      this.defaultISOCode = item.iso2;
+      this.currentDialCode = item.dialCode;
+      this.toggle = false;
     }
   }
 };
@@ -160,12 +174,8 @@ export default {
       // input
       .country-code__input {
         max-width: 120px;
-        padding: 0 0 0 40px;
+        padding: 0 0 0 45px;
         cursor: pointer;
-      }
-      .country-code__input::placeholder {
-        color: #c0c4cc;
-        font-size: 12px;
       }
       // arrow
       .country-code__arrow {
@@ -183,32 +193,56 @@ export default {
       background: #dcdfe6;
     }
     .phone-number-wrapper {
+      min-width: 240px;
+      .phone-number__input {
+        min-width: 230px;
+      }
+    }
+
+    .inner-input {
       color: #606266;
-      min-width: 220px;
+    }
+    .inner-input::placeholder {
+      color: #c0c4cc;
+      font-size: 12px;
     }
   }
   // country list
   .country-code-container {
-    height: 217px;
-    max-height: 217px;
-    // background-color: red;
+    height: 210px;
+    max-height: 210px;
     border: 1px solid #ebeef5;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     overflow: scroll;
     cursor: pointer;
     .country-code__list {
       display: flex;
-      flex-direction: row;
       align-content: center;
       align-items: flex-start;
+      .flag {
+        padding: 10px 5px;
+        margin: 0 0 0 -9px;
+      }
       .dial-code {
-        padding: 5px 5px 5px 10px;
         min-width: 40px;
+        padding: 10px 0;
       }
       .country-name {
-        padding: 5px 0 5px 20px;
+        padding: 10px 5px;
       }
     }
+    .country-code__list:hover {
+      background-color: #f5f7fa;
+    }
+  }
+  .slide-enter-active,
+  .slide-leave-active {
+    opacity: 1;
+    transition: opacity 0.1s;
+  }
+
+  .slide-enter, .slide-leave-to /* .fade-leave-active below version 2.1.8 */ {
+    opacity: 0;
   }
 }
 </style>
