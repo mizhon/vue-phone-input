@@ -33,29 +33,39 @@
       </div>
       <div class="fence"></div>
       <div class="phone-number-wrapper">
-        <input class="phone-number" type="number" placeholder="" />
+        <input class="phone-number__input" type="number" placeholder="" />
       </div>
     </div>
     <!-- country code dropdown list -->
-    <div ref="country-code" class="country-code__list">
-      <Transition name="toggle">
-        <RecycleScroller
+    <div class="country-code-container" v-show="toggle">
+      <transition>
+        <recycle-scroller
           class="scroller"
-          :items="countryCodes"
-          :item-size="20"
+          :items="countries"
+          :item-size="1"
           key-field="iso2"
         >
-          123
-        </RecycleScroller>
-      </Transition>
+          <template v-slot="{ item }">
+            <div class="country-code__list">
+              <div class="dial-code">
+                {{ item.dialCode }}
+              </div>
+              <div class="country-name">
+                {{ item.name }}
+              </div>
+            </div>
+          </template>
+        </recycle-scroller>
+      </transition>
     </div>
   </div>
 </template>
 
 <script>
-import "../assets/styles/flags.css";
+// import "../assets/styles/flags.css";
 import CountryFlag from "vue-country-flag";
 import { RecycleScroller } from "vue-virtual-scroller";
+import { countries } from "../assets/js/country-codes.js";
 
 export default {
   name: "VuePhoneInput",
@@ -86,7 +96,8 @@ export default {
   },
   data() {
     return {
-      toggle: false
+      toggle: false,
+      countries
     };
   },
   computed: {
@@ -120,12 +131,15 @@ export default {
 </script>
 <style lang="scss" scoped>
 .phone-input-wrapper {
+  // phone input
   .phone-input-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     border: 1px solid #dcdfe6;
     user-select: none;
+    overflow: auto;
+    border-radius: 4px;
     .country-code-wrapper {
       display: flex;
       flex-direction: row;
@@ -162,21 +176,6 @@ export default {
           padding: 0 5px;
         }
       }
-      // country list
-      .country-code__list {
-        position: absolute;
-        // .country-code__list-items {
-        //   position: relative;
-        //   background: red;
-        //   top: 40px;
-        //   right: -100px;
-        //   border: 1px solid #e4e7ed;
-        //   background-color: #fff;
-        //   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-        //   box-sizing: border-box;
-        //   width: 348px;
-        // }
-      }
     }
     .fence {
       width: 1px;
@@ -185,6 +184,30 @@ export default {
     }
     .phone-number-wrapper {
       color: #606266;
+      min-width: 220px;
+    }
+  }
+  // country list
+  .country-code-container {
+    height: 217px;
+    max-height: 217px;
+    // background-color: red;
+    border: 1px solid #ebeef5;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    overflow: scroll;
+    cursor: pointer;
+    .country-code__list {
+      display: flex;
+      flex-direction: row;
+      align-content: center;
+      align-items: flex-start;
+      .dial-code {
+        padding: 5px 5px 5px 10px;
+        min-width: 40px;
+      }
+      .country-name {
+        padding: 5px 0 5px 20px;
+      }
     }
   }
 }
