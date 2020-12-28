@@ -43,8 +43,8 @@
     </div>
     <transition name="slide">
       <!-- country code dropdown list -->
-      <div class="country-code-container" v-if="toggle">
-        <recycle-scroller
+      <!-- <div class="country-code-container" v-show="toggle"> -->
+      <!-- <recycle-scroller
           class="scroller"
           :items="countries"
           :item-size="1"
@@ -65,8 +65,8 @@
               </div>
             </div>
           </template>
-        </recycle-scroller>
-      </div>
+        </recycle-scroller> -->
+      <!-- </div> -->
       <!-- error message -->
       <!-- <div class="error-message-container">
       </div> -->
@@ -76,14 +76,14 @@
 
 <script>
 import CountryFlag from "vue-country-flag";
-import { RecycleScroller } from "vue-virtual-scroller";
+// import { RecycleScroller } from "vue-virtual-scroller";
 import { countries } from "../assets/js/country-codes.js";
 
 export default {
   name: "VuePhoneInput",
   components: {
-    CountryFlag,
-    RecycleScroller
+    CountryFlag
+    // RecycleScroller
   },
   props: {
     value: {
@@ -124,6 +124,7 @@ export default {
       this.$emit("input", event.target.value);
     },
     handleFocus() {
+      console.log("testing ...");
       this.focused = true;
       this.toggle = true;
       this.$emit("focus", event);
@@ -167,6 +168,7 @@ export default {
       display: flex;
       flex-direction: row;
       justify-content: center;
+      max-width: 400px;
       cursor: pointer;
       // flag
       .country-code__flag {
