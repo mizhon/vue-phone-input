@@ -41,8 +41,8 @@
         />
       </div>
     </div>
-    <!-- country code dropdown list -->
     <transition name="slide">
+      <!-- country code dropdown list -->
       <div class="country-code-container" v-if="toggle">
         <recycle-scroller
           class="scroller"
@@ -53,7 +53,8 @@
           <template v-slot="{ item }">
             <div
               class="country-code__list"
-              @click="handleCountrySelected(item)"
+              :class="{ selected: defaultISOCode === item.iso2 }"
+              @click="updateCountrySelected(item)"
             >
               <country-flag :country="item.iso2" :size="size" class="flag" />
               <div class="dial-code">
@@ -66,6 +67,9 @@
           </template>
         </recycle-scroller>
       </div>
+      <!-- error message -->
+      <!-- <div class="error-message-container">
+      </div> -->
     </transition>
   </div>
 </template>
@@ -82,7 +86,10 @@ export default {
     RecycleScroller
   },
   props: {
-    value: [String, Number],
+    value: {
+      type: String,
+      default: "cn"
+    },
     showFlag: {
       type: Boolean,
       default: true
@@ -105,24 +112,23 @@ export default {
     return {
       toggle: false,
       countries,
-      defaultISOCode: "cn",
-      currentDialCode: "86"
+      defaultISOCode: this.value,
+      currentDialCode: "86", // 根据默认的value查找对应dial code
+      isSelected: false
     };
   },
   computed: {},
   methods: {
     handleInput(event) {
-      console.log("input triggered: -->", event);
+      console.log("input triggered: -->", event.target.value);
       this.$emit("input", event.target.value);
     },
     handleFocus() {
-      console.log("focus", event);
       this.focused = true;
       this.toggle = true;
       this.$emit("focus", event);
     },
     handleBlur(event) {
-      console.log(event);
       this.focused = false;
       this.toggle = !this.toggle;
       this.$emit("blur", event);
@@ -134,10 +140,13 @@ export default {
       console.log("testing ...", this.toggle);
       this.toggle = !this.toggle;
     },
-    handleCountrySelected(item) {
+    async updateCountrySelected(item) {
       console.log("country selected", item.iso2);
       this.defaultISOCode = item.iso2;
       this.currentDialCode = item.dialCode;
+      // this.$emit("input", item.iso2 || null);
+      // await this.$nextTick();
+      this.isSelected = true;
       this.toggle = false;
     }
   }
@@ -195,7 +204,7 @@ export default {
     .phone-number-wrapper {
       min-width: 240px;
       .phone-number__input {
-        min-width: 230px;
+        width: 240px;
       }
     }
 
@@ -207,6 +216,15 @@ export default {
       font-size: 12px;
     }
   }
+
+  .phone-input-container:hover {
+    border-color: #c0c4cc;
+  }
+
+  .phone-input-container:focus {
+    border-color: #409eff;
+  }
+
   // country list
   .country-code-container {
     height: 210px;
@@ -234,7 +252,20 @@ export default {
     .country-code__list:hover {
       background-color: #f5f7fa;
     }
+    .selected,
+    .selected:hover {
+      color: #fff;
+      background-color: #409eff;
+      font-weight: 600;
+    }
   }
+  // error message
+  .error-message-container {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+  }
+  // slide transition
   .slide-enter-active,
   .slide-leave-active {
     opacity: 1;
