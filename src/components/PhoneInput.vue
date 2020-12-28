@@ -5,12 +5,12 @@
       <div class="country-code-container">
         <!-- flag container-->
         <div class="country-code-container__flag" v-if="codeOption.hasFlag">
-          <country-flag :country="defaultISOCode" :size="size" />
+          <country-flag :country="defaultISOCode" :size="flagSize" />
         </div>
         <!-- input container -->
         <input
           ref="countryCodeInput"
-          v-model="dialCode"
+          v-model="defaultdialCode"
           type="text"
           class="country-code-container__input"
           :maxlength="codeOption.maxLength"
@@ -47,7 +47,7 @@
         />
       </div>
     </div>
-    <div class="country-list-container">
+    <div class="country-list-container" v-show="toggle">
       123456
     </div>
   </div>
@@ -73,6 +73,7 @@ export default {
       default: function() {
         return {
           hasFlag: true,
+          // size: "normal",
           readonly: false,
           maxLength: 4, // 区号最长4位
           placeHolder: "Country Code"
@@ -92,7 +93,10 @@ export default {
   data() {
     return {
       toggle: false,
-      defaultISOCode: this.value
+      flagSize: "normal",
+      defaultdialCode: "86",
+      defaultISOCode: this.value,
+      phoneNum: null
     };
   },
   methods: {
@@ -101,6 +105,7 @@ export default {
     onCountryCodeBlur() {},
     onCountryCodeChange() {},
     handleListToggle() {
+      console.log("testing", this.toggle);
       this.toggle = !this.toggle;
     }
   }
