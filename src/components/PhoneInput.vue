@@ -48,20 +48,47 @@
       </div>
     </div>
     <div class="country-list-container" v-show="toggle">
-      123456
+      <recycle-scroller
+        class="scroller"
+        :items="countryCodes"
+        :item-size="1"
+        key-field="iso2"
+      >
+        <template v-slot="{ item }">
+          <div
+            class="country-list-container__list"
+            :class="{ selected: defaultISOCode === item.iso2 }"
+            @click="updateSelectedCountry(item)"
+          >
+            <div class="">
+              <country-flag
+                :country="item.iso2"
+                :size="flagSize"
+                class="country-list-container__list-flag"
+              />
+              <div class="country-list-container__list-dial-code">
+                {{ item.dialCode }}
+              </div>
+            </div>
+            <div class="country-list-container__list-country-name">
+              {{ item.name }}
+            </div>
+          </div>
+        </template>
+      </recycle-scroller>
     </div>
   </div>
 </template>
 <script>
 import CountryFlag from "vue-country-flag";
-// import { RecycleScroller } from "vue-virtual-scroller";
-// import { countries } from "../assets/js/country-codes.js";
+import { RecycleScroller } from "vue-virtual-scroller";
+import { countries } from "../assets/js/country-codes.js";
 
 export default {
   name: "PhoneInput",
   components: {
     CountryFlag,
-    // RecycleScroller
+    RecycleScroller
   },
   props: {
     value: {
@@ -73,10 +100,9 @@ export default {
       default: function() {
         return {
           hasFlag: true,
-          // size: "normal",
           readonly: false,
           maxLength: 4, // 区号最长4位
-          placeHolder: "Country Code"
+          placeHolder: ""
         };
       }
     },
@@ -93,6 +119,7 @@ export default {
   data() {
     return {
       toggle: false,
+      countryCodes: countries,
       flagSize: "normal",
       defaultdialCode: "86",
       defaultISOCode: this.value,
@@ -105,8 +132,13 @@ export default {
     onCountryCodeBlur() {},
     onCountryCodeChange() {},
     handleListToggle() {
-      console.log("testing", this.toggle);
       this.toggle = !this.toggle;
+    },
+    updateSelectedCountry(item) {
+      this.defaultdialCode = item.dialCode;
+      this.defaultISOCode = item.iso2;
+      this.isSelected = true;
+      this.toggle = false;
     }
   }
 };
@@ -125,10 +157,10 @@ export default {
       display: flex;
       cursor: pointer;
       &__flag {
-        padding: 10px 0 0 10px;
+        padding: 10px 0 0 5px;
       }
       &__input {
-        max-width: 105px;
+        max-width: 60px;
       }
       &__arrow {
         // position: absolute;
@@ -154,14 +186,31 @@ export default {
         width: 240px;
       }
     }
-    // country-code list container
-    .country-code-list-container {
-      height: 210px;
-      max-height: 210px;
-      border: 1px solid #ebeef5;
-      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-      overflow: scroll;
-      cursor: pointer;
+  }
+  // country-code list container
+  .country-list-container {
+    height: 217px;
+    max-height: 217px;
+    border: 1px solid #ebeef5;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    overflow: scroll;
+    cursor: pointer;
+    &__list {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 5px 10px;
+      &-flag {
+        // margin-right: 10px;
+        display: block;
+      }
+      &-dial-code {
+        display: block;
+      }
+
+      &-country-name {
+        display: block;
+      }
     }
   }
 }
