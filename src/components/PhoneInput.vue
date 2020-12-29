@@ -67,7 +67,7 @@
                 class="country-list-container__list-flag"
               />
               <div class="country-list-container__list-dial-code">
-                {{ item.dialCode }}
+                +{{ item.dialCode }}
               </div>
             </div>
             <div class="country-list-container__list-country-name">
@@ -211,6 +211,9 @@ export default {
       &-country-name {
         display: block;
       }
+    }
+    &__list:hover {
+      background-color: #f5f7fa;
     }
   }
 }
