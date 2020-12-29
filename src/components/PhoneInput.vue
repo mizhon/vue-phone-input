@@ -13,10 +13,9 @@
           type="text"
           v-model="defaultDialCode"
           class="country-code-container__input"
+          onkeyup="value = value.replace(/[\W]/g,'')"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
-          :placeholder="codeOption.placeholder"
-          :onkeyup="onInputValidate"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeBlur"
@@ -43,7 +42,7 @@
           v-model="phoneNum"
           type="number"
           class="phone-number-container__input"
-          onKeypress="return (/[\d]/.test(String.fromCharCode(event.keyCode)))"
+          onKeypress="return /[\d]/.test(String.fromCharCode(event.keyCode));"
           :readonly="phoneOption.readonly"
           :placeholder="phonePlaceholder"
         />
@@ -118,10 +117,10 @@ export default {
       type: Object,
       default: function() {
         return {
+          dialCode: "cn", // lowercase dial code
           hasFlag: true,
           readonly: false,
-          maxLength: 10,
-          placeholder: ""
+          maxLength: 10
         };
       }
     },
@@ -144,28 +143,23 @@ export default {
       countryCodes: countries,
       currentCountry: this.countryCode,
       flagSize: "normal",
-      dialCode: "86",
+      dialCode: "",
       codePlaceholderPrefix: "+",
       phonePlaceholderPrefix: "e.g. ", // placeholder prefix string
       phoneNum: null,
-      showDeleteIcon: false
+      showDeleteIcon: false,
+      phonePlaceholder: ""
     };
   },
   created() {
     this.phonePlaceholder = this.samplePhoneNumer;
+    this.dialCode = "93";
   },
   methods: {
-    onInputValidate(val) {
-      if (val) {
-        return val.replace(/[\W]/g, "");
-      } else {
-        return "";
-      }
-    },
     onCountryCodeInput(event) {
       // 当没有值时，使用默认给定的值
       console.log(event.data);
-      if (event.data === null) {
+      if (event.data === null || event.data === undefined) {
         // todo
       } else {
         // todo
@@ -180,12 +174,14 @@ export default {
     // 失去焦点时收起列表
     onCountryCodeBlur() {
       this.fold = true;
+      console.log("blur: ", this.fold, this.countryCodeFocus);
     },
     onCountryCodeChanged() {
       // todo
       console.log("on country code changed ...");
     },
     updateSelectedCountryCode(item) {
+      console.log(item);
       this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
       this.isSelected = true;
@@ -193,18 +189,9 @@ export default {
       this.phonePlaceholder = this.samplePhoneNumer;
     },
     handleListToggle() {
-      console.log(
-        "before handle toggle --->",
-        this.fold,
-        this.countryCodeFocus
-      );
-      // this.countryCodeFocus = false;
-      // if (this.fold === true) {
-      //   this.fold = false;
-      // } else {
-      //   this.fold = true;
-      // }
-      console.log("after handle toggle --->", this.fold, this.countryCodeFocus);
+      this.countryCodeFocus = false;
+      this.fold = !this.fold;
+      console.log("handle fold");
     },
     removePhoneNumber() {
       this.phoneNum = "";
