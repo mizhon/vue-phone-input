@@ -10,24 +10,24 @@
         <!-- input container -->
         <input
           ref="countryCodeInput"
-          v-model="defaultDialCode"
           type="text"
-          pattern="[0-9]*"
+          v-model="defaultDialCode"
           class="country-code-container__input"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
           :placeholder="codeOption.placeholder"
+          :onkeyup="onInputValidate"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeBlur"
-          @change="onCountryCodeChange"
+          @change="onCountryCodeChanged"
         />
       </div>
       <div class="country-code-container__arrow" @click="handleListToggle">
         <img
           :style="
             `transform: rotate(${
-              toggle ? '180deg' : '0deg'
+              fold ? '0deg' : '180deg'
             }); transition: transform .3s;`
           "
           src="../assets/imgs/arrow.svg"
@@ -56,18 +56,19 @@
         </div>
       </div>
     </div>
-    <div class="country-list-container" v-show="toggle">
+    <!-- country code select list container -->
+    <div class="country-list-container" v-show="!fold">
       <recycle-scroller
-        class="scroller"
-        :items="countryCodes"
         :item-size="1"
+        :items="countryCodes"
+        class="scroller"
         key-field="iso2"
       >
         <template v-slot="{ item }">
           <div
             class="country-list-container__list"
             :class="{ selected: currentCountry === item.iso2 }"
-            @click="updateSelectedCountry(item)"
+            @click="updateSelectedCountryCode(item)"
           >
             <div class="country-list-container__list-item">
               <country-flag
@@ -105,9 +106,13 @@ export default {
     RecycleScroller
   },
   props: {
-    value: {
+    countryCode: {
       type: String,
       default: "cn"
+    },
+    filterable: {
+      type: Boolean,
+      default: true
     },
     codeOption: {
       type: Object,
@@ -115,7 +120,7 @@ export default {
         return {
           hasFlag: true,
           readonly: false,
-          maxLength: 4, // 区号最长4位
+          maxLength: 10,
           placeholder: ""
         };
       }
@@ -134,8 +139,10 @@ export default {
     return {
       examples,
       toggle: false,
+      fold: true, // list 折叠状态
+      countryCodeFocus: false,
       countryCodes: countries,
-      currentCountry: this.value,
+      currentCountry: this.countryCode,
       flagSize: "normal",
       dialCode: "86",
       codePlaceholderPrefix: "+",
@@ -148,26 +155,56 @@ export default {
     this.phonePlaceholder = this.samplePhoneNumer;
   },
   methods: {
-    onCountryCodeInput() {},
+    onInputValidate(val) {
+      if (val) {
+        return val.replace(/[\W]/g, "");
+      } else {
+        return "";
+      }
+    },
+    onCountryCodeInput(event) {
+      // 当没有值时，使用默认给定的值
+      console.log(event.data);
+      if (event.data === null) {
+        // todo
+      } else {
+        // todo
+      }
+    },
+    // 选中时打开列表
     onCountryCodeFocus() {
-      this.toggle = true;
-      console.log("country code focusing");
+      this.countryCodeFocus = true;
+      this.fold = false;
+      console.log("focus: ", this.fold, this.countryCodeFocus);
     },
+    // 失去焦点时收起列表
     onCountryCodeBlur() {
-      console.log("country code no focusing");
+      this.fold = true;
     },
-    onCountryCodeChange() {
-      console.log("country code changing");
+    onCountryCodeChanged() {
+      // todo
+      console.log("on country code changed ...");
     },
-    handleListToggle() {
-      this.toggle = !this.toggle;
-    },
-    updateSelectedCountry(item) {
+    updateSelectedCountryCode(item) {
       this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
       this.isSelected = true;
-      this.toggle = false;
+      this.fold = true;
       this.phonePlaceholder = this.samplePhoneNumer;
+    },
+    handleListToggle() {
+      console.log(
+        "before handle toggle --->",
+        this.fold,
+        this.countryCodeFocus
+      );
+      // this.countryCodeFocus = false;
+      // if (this.fold === true) {
+      //   this.fold = false;
+      // } else {
+      //   this.fold = true;
+      // }
+      console.log("after handle toggle --->", this.fold, this.countryCodeFocus);
     },
     removePhoneNumber() {
       this.phoneNum = "";
@@ -275,7 +312,7 @@ export default {
   // country-code list container
   .country-list-container {
     position: relative;
-    width: 390px;
+    width: 395px;
     background-color: #fff;
     height: 217px;
     max-height: 217px;
