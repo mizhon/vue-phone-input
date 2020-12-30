@@ -11,7 +11,7 @@
         <input
           ref="countryCodeInput"
           type="text"
-          v-model="defaultDialCode"
+          v-model="currentDialCode"
           class="country-code-container__input"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
@@ -175,17 +175,24 @@ export default {
     onCountryCodeFocus() {
       this.countryCodeFocus = true;
       this.fold = false;
-      console.log("focus: ", this.fold, this.countryCodeFocus);
+      console.log(
+        "focus: ",
+        this.fold,
+        this.countryCodeFocus,
+        this.currentDialCode
+      );
     },
     // 失去焦点时收起列表
-    onCountryCodeBlur() {
+    onCountryCodeBlur(event) {
+      console.log("失去焦点", event);
       this.fold = true;
     },
     onCountryCodeChanged() {
       // todo
-      console.log("on country code changed ...");
+      console.log("on country code changed ...", this.currentDialCode);
     },
     updateSelectedCountryCode(item) {
+      console.log("--->", item);
       this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
       this.isSelected = true;
@@ -198,12 +205,12 @@ export default {
         this.fold,
         this.countryCodeFocus
       );
-      // this.countryCodeFocus = false;
-      // if (this.fold === true) {
-      //   this.fold = false;
-      // } else {
-      //   this.fold = true;
-      // }
+      this.countryCodeFocus = false;
+      if (this.fold === true) {
+        this.fold = false;
+      } else {
+        this.fold = true;
+      }
       console.log("after handle toggle --->", this.fold, this.countryCodeFocus);
     },
     removePhoneNumber() {
@@ -213,7 +220,7 @@ export default {
     }
   },
   computed: {
-    defaultDialCode: {
+    currentDialCode: {
       get() {
         return this.codePlaceholderPrefix + this.dialCode;
       },
