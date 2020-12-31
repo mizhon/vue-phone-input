@@ -1,6 +1,6 @@
 <template>
   <div class="phone-number-wrapper">
-    <div class="phone-input-container">
+    <div class="phone-input-container" :class="{ focused: countryCodeFocus }">
       <!-- country code input container -->
       <div class="country-code-container">
         <!-- flag container-->
@@ -11,11 +11,10 @@
         <input
           ref="countryCodeInput"
           type="text"
-          v-model="defaultDialCode"
+          v-model.trim="currentDialCode"
           class="country-code-container__input"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
-          @keyup="onKeyUp"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeBlur"
@@ -42,7 +41,7 @@
           v-model="phoneNum"
           type="number"
           class="phone-number-container__input"
-          onKeypress="return /[\d]/.test(String.fromCharCode(event.keyCode));"
+          :maxlength="phoneOption.maxLength"
           :readonly="phoneOption.readonly"
           :placeholder="phonePlaceholder"
         />
@@ -59,7 +58,7 @@
     <div class="country-list-container" v-show="!fold">
       <recycle-scroller
         :item-size="1"
-        :items="countryCodes"
+        :items="countryLists"
         class="scroller"
         key-field="iso2"
       >
@@ -120,7 +119,7 @@ export default {
           dialCode: "cn", // lowercase dial code
           hasFlag: true,
           readonly: false,
-          maxLength: 5
+          maxLength: 6
         };
       }
     },
@@ -129,7 +128,8 @@ export default {
       default: function() {
         return {
           readonly: false,
-          placeholder: "Phone Number"
+          placeholder: "Phone Number",
+          maxLength: 16
         };
       }
     }
@@ -140,7 +140,7 @@ export default {
       toggle: false,
       fold: true, // list 折叠状态
       countryCodeFocus: false,
-      countryCodes: countries,
+      countryLists: countries,
       currentCountry: this.countryCode,
       flagSize: "normal",
       dialCode: "",
@@ -156,36 +156,30 @@ export default {
     this.dialCode = "93";
   },
   methods: {
-    onKeyUp() {
-      console.log(this.defaultDialCode);
-      // return value.replace(/[\W]/g, "");
-    },
-    onCountryCodeInput(event) {
+    onCountryCodeInput(e) {
       // 当没有值时，使用默认给定的值
-      console.log(event.data);
-      if (event.data === null || event.data === undefined) {
-        // todo
+      let rawData = e.target.value;
+      if (rawData) {
+        // 检查rawData开头是数字还是字母
       } else {
-        // todo
+        // console.log("hi");
       }
     },
     // 选中时打开列表
-    onCountryCodeFocus() {
+    onCountryCodeFocus(event) {
       this.countryCodeFocus = true;
       this.fold = false;
-      // console.log("focus: ", this.fold, this.countryCodeFocus);
+      this.$emit("focus", event);
     },
     // 失去焦点时收起列表
     onCountryCodeBlur() {
-      // this.fold = true;
-      // console.log("blur: ", this.fold, this.countryCodeFocus);
+      this.countryCodeFocus = false;
+      this.$emit("blur");
     },
     onCountryCodeChanged() {
-      // todo
-      // console.log("on country code changed ...");
+      // this.$emit("change");
     },
     updateSelectedCountryCode(item) {
-      console.log("update --->", item);
       this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
       this.isSelected = true;
@@ -210,7 +204,7 @@ export default {
     }
   },
   computed: {
-    defaultDialCode: {
+    currentDialCode: {
       get() {
         return this.codePlaceholderPrefix + this.dialCode;
       },
@@ -268,7 +262,7 @@ export default {
         img {
           position: relative;
           top: 12px;
-          left: -10px;
+          left: -8px;
         }
       }
     }
@@ -291,7 +285,7 @@ export default {
         img {
           position: relative;
           top: 12px;
-          left: -10px;
+          left: -8px;
           padding-left: 5px;
         }
       }
@@ -306,9 +300,11 @@ export default {
   .phone-input-container:hover {
     border-color: #c0c4cc;
   }
-  .phone-input-container:focus {
-    border-color: #409eff;
+  .focused,
+  .focused:hover {
+    border: 1px solid #409eff;
   }
+
   // country-code list container
   .country-list-container {
     position: relative;
