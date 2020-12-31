@@ -13,9 +13,9 @@
           type="text"
           v-model="defaultDialCode"
           class="country-code-container__input"
-          onkeyup="value = value.replace(/[\W]/g,'')"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
+          @keyup="onKeyUp"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeBlur"
@@ -120,7 +120,7 @@ export default {
           dialCode: "cn", // lowercase dial code
           hasFlag: true,
           readonly: false,
-          maxLength: 10
+          maxLength: 5
         };
       }
     },
@@ -156,6 +156,10 @@ export default {
     this.dialCode = "93";
   },
   methods: {
+    onKeyUp() {
+      console.log(this.defaultDialCode);
+      // return value.replace(/[\W]/g, "");
+    },
     onCountryCodeInput(event) {
       // 当没有值时，使用默认给定的值
       console.log(event.data);
@@ -169,19 +173,19 @@ export default {
     onCountryCodeFocus() {
       this.countryCodeFocus = true;
       this.fold = false;
-      console.log("focus: ", this.fold, this.countryCodeFocus);
+      // console.log("focus: ", this.fold, this.countryCodeFocus);
     },
     // 失去焦点时收起列表
     onCountryCodeBlur() {
-      this.fold = true;
-      console.log("blur: ", this.fold, this.countryCodeFocus);
+      // this.fold = true;
+      // console.log("blur: ", this.fold, this.countryCodeFocus);
     },
     onCountryCodeChanged() {
       // todo
-      console.log("on country code changed ...");
+      // console.log("on country code changed ...");
     },
     updateSelectedCountryCode(item) {
-      console.log(item);
+      console.log("update --->", item);
       this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
       this.isSelected = true;
@@ -191,7 +195,13 @@ export default {
     handleListToggle() {
       this.countryCodeFocus = false;
       this.fold = !this.fold;
-      console.log("handle fold");
+      // when country input lost focus
+      // if (!this.countryCodeFocus) {
+      //   console.log("lost focus");
+      //   this.fold = true;
+      // } else {
+      //   this.fold = !this.fold;
+      // }
     },
     removePhoneNumber() {
       this.phoneNum = "";
@@ -224,6 +234,9 @@ export default {
       } else {
         this.showDeleteIcon = true;
       }
+    },
+    defaultDialCode(oldVal, newVal) {
+      console.log(oldVal, newVal, this.dialCode);
     }
   }
 };
