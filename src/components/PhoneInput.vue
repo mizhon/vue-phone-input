@@ -1,6 +1,6 @@
 <template>
   <div class="phone-number-wrapper">
-    <div class="phone-input-container">
+    <div class="phone-input-container" :class="{ focused: countryCodeFocus }">
       <!-- country code input container -->
       <div class="country-code-container">
         <!-- flag container-->
@@ -163,7 +163,7 @@ export default {
       if (rawData) {
         // 检查rawData开头是数字还是字母
       } else {
-        console.log("hi");
+        // console.log("hi");
       }
     },
     // 选中时打开列表
@@ -174,7 +174,8 @@ export default {
     },
     // 失去焦点时收起列表
     onCountryCodeBlur() {
-      // this.$emit("blur");
+      this.countryCodeFocus = false;
+      this.$emit("blur");
     },
     onCountryCodeChanged() {
       // this.$emit("change");
@@ -291,11 +292,9 @@ export default {
   .phone-input-container:hover {
     border-color: #c0c4cc;
   }
-  // .phone-input-container:focus {
-  //   border-color: #409eff;
-  // }
-  .focused {
-    border-color: #409eff;
+  .focused,
+  .focused:hover {
+    border: 1px solid #409eff;
   }
 
   // country-code list container
