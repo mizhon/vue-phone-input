@@ -11,12 +11,11 @@
         <input
           ref="countryCodeInput"
           type="text"
-          v-model="currentDialCode"
+          v-model.trim="currentDialCode"
           class="country-code-container__input"
+          onkeyup="value = value.replace(/[\W]/g,'')"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
-          :placeholder="codeOption.placeholder"
-          :onkeyup="onInputValidate"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeBlur"
@@ -43,7 +42,7 @@
           v-model="phoneNum"
           type="number"
           class="phone-number-container__input"
-          onKeypress="return (/[\d]/.test(String.fromCharCode(event.keyCode)))"
+          :maxlength="phoneOption.maxLength"
           :readonly="phoneOption.readonly"
           :placeholder="phonePlaceholder"
         />
@@ -60,7 +59,7 @@
     <div class="country-list-container" v-show="!fold">
       <recycle-scroller
         :item-size="1"
-        :items="countryCodes"
+        :items="countryLists"
         class="scroller"
         key-field="iso2"
       >
@@ -118,10 +117,10 @@ export default {
       type: Object,
       default: function() {
         return {
+          dialCode: "cn", // lowercase dial code
           hasFlag: true,
           readonly: false,
-          maxLength: 10,
-          placeholder: ""
+          maxLength: 6
         };
       }
     },
@@ -130,7 +129,8 @@ export default {
       default: function() {
         return {
           readonly: false,
-          placeholder: "Phone Number"
+          placeholder: "Phone Number",
+          maxLength: 16
         };
       }
     }
@@ -141,58 +141,45 @@ export default {
       toggle: false,
       fold: true, // list 折叠状态
       countryCodeFocus: false,
-      countryCodes: countries,
+      countryLists: countries,
       currentCountry: this.countryCode,
       flagSize: "normal",
-      dialCode: "86",
+      dialCode: "",
       codePlaceholderPrefix: "+",
       phonePlaceholderPrefix: "e.g. ", // placeholder prefix string
       phoneNum: null,
-      showDeleteIcon: false
+      showDeleteIcon: false,
+      phonePlaceholder: ""
     };
   },
   created() {
     this.phonePlaceholder = this.samplePhoneNumer;
+    this.dialCode = "93";
   },
   methods: {
-    onInputValidate(val) {
-      if (val) {
-        return val.replace(/[\W]/g, "");
-      } else {
-        return "";
-      }
-    },
-    onCountryCodeInput(event) {
+    onCountryCodeInput(e) {
       // 当没有值时，使用默认给定的值
-      console.log(event.data);
-      if (event.data === null) {
-        // todo
+      let rawData = e.target.value;
+      if (rawData) {
+        // 检查rawData开头是数字还是字母
       } else {
-        // todo
+        console.log("hi");
       }
     },
     // 选中时打开列表
-    onCountryCodeFocus() {
+    onCountryCodeFocus(event) {
       this.countryCodeFocus = true;
       this.fold = false;
-      console.log(
-        "focus: ",
-        this.fold,
-        this.countryCodeFocus,
-        this.currentDialCode
-      );
+      this.$emit("focus", event);
     },
     // 失去焦点时收起列表
-    onCountryCodeBlur(event) {
-      console.log("失去焦点", event);
-      this.fold = true;
+    onCountryCodeBlur() {
+      // this.$emit("blur");
     },
     onCountryCodeChanged() {
-      // todo
-      console.log("on country code changed ...", this.currentDialCode);
+      // this.$emit("change");
     },
     updateSelectedCountryCode(item) {
-      console.log("--->", item);
       this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
       this.isSelected = true;
@@ -200,18 +187,9 @@ export default {
       this.phonePlaceholder = this.samplePhoneNumer;
     },
     handleListToggle() {
-      console.log(
-        "before handle toggle --->",
-        this.fold,
-        this.countryCodeFocus
-      );
       this.countryCodeFocus = false;
-      if (this.fold === true) {
-        this.fold = false;
-      } else {
-        this.fold = true;
-      }
-      console.log("after handle toggle --->", this.fold, this.countryCodeFocus);
+      this.fold = !this.fold;
+      console.log("handle fold");
     },
     removePhoneNumber() {
       this.phoneNum = "";
@@ -275,7 +253,7 @@ export default {
         img {
           position: relative;
           top: 12px;
-          left: -10px;
+          left: -8px;
         }
       }
     }
@@ -298,7 +276,7 @@ export default {
         img {
           position: relative;
           top: 12px;
-          left: -10px;
+          left: -8px;
           padding-left: 5px;
         }
       }
@@ -313,9 +291,13 @@ export default {
   .phone-input-container:hover {
     border-color: #c0c4cc;
   }
-  .phone-input-container:focus {
+  // .phone-input-container:focus {
+  //   border-color: #409eff;
+  // }
+  .focused {
     border-color: #409eff;
   }
+
   // country-code list container
   .country-list-container {
     position: relative;
