@@ -1,6 +1,9 @@
 <template>
   <div class="phone-number-wrapper">
-    <div class="phone-input-container" :class="{ focused: countryCodeFocus }">
+    <div
+      class="phone-input-container"
+      :class="{ focused: countryCodeInputFocus || phoneInputFocus || !fold }"
+    >
       <!-- country code input container -->
       <div class="country-code-container">
         <!-- flag container-->
@@ -17,7 +20,7 @@
           :readonly="codeOption.readonly"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
-          @blur="onCountryCodeBlur"
+          @blur="onCountryCodeInputBlur"
           @change="onCountryCodeChanged"
         />
       </div>
@@ -44,6 +47,8 @@
           :maxlength="phoneOption.maxLength"
           :readonly="phoneOption.readonly"
           :placeholder="phonePlaceholder"
+          @focus="onPhoneInputFocus"
+          @blur="onPhoneInputBlur"
         />
         <div
           class="phone-number-container__delete"
@@ -139,7 +144,8 @@ export default {
       examples,
       toggle: false,
       fold: true, // list 折叠状态
-      countryCodeFocus: false,
+      countryCodeInputFocus: false,
+      phoneInputFocus: false,
       countryLists: countries,
       currentCountry: this.countryCode,
       flagSize: "normal",
@@ -167,13 +173,13 @@ export default {
     },
     // 选中时打开列表
     onCountryCodeFocus(event) {
-      this.countryCodeFocus = true;
+      this.countryCodeInputFocus = true;
       this.fold = false;
       this.$emit("focus", event);
     },
     // 失去焦点时收起列表
-    onCountryCodeBlur() {
-      this.countryCodeFocus = false;
+    onCountryCodeInputBlur() {
+      this.countryCodeInputFocus = false;
       this.$emit("blur");
     },
     onCountryCodeChanged() {
@@ -187,20 +193,22 @@ export default {
       this.phonePlaceholder = this.samplePhoneNumer;
     },
     handleListToggle() {
-      this.countryCodeFocus = false;
+      this.countryCodeInputFocus = false;
       this.fold = !this.fold;
-      // when country input lost focus
-      // if (!this.countryCodeFocus) {
-      //   console.log("lost focus");
-      //   this.fold = true;
-      // } else {
-      //   this.fold = !this.fold;
+      // if (!this.fold) {
+
       // }
     },
     removePhoneNumber() {
       this.phoneNum = "";
       this.showDeleteIcon = true;
       console.log("testing ...", this.phoneNum, this.showDeleteIcon);
+    },
+    onPhoneInputFocus() {
+      this.phoneInputFocus = true;
+    },
+    onPhoneInputBlur() {
+      this.phoneInputFocus = false;
     }
   },
   computed: {
