@@ -189,7 +189,6 @@ export default {
         let rawData = e.target.value;
         if (rawData) {
           this.countryLists = this.filterCountries(rawData);
-          console.log(this.countryLists);
         } else {
           this.countryLists = COUNTRY_LIST;
         }
