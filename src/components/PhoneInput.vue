@@ -18,6 +18,7 @@
           class="country-code-container__input"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
+          onkeyup="value=value.replace(/\D/g,'')"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeInputBlur"
@@ -41,7 +42,7 @@
       <div class="phone-number-container">
         <input
           ref="phoneNumberInput"
-          v-model="phoneNum"
+          v-model.trim="phoneNum"
           type="number"
           class="phone-number-container__input"
           :maxlength="phoneOption.maxLength"
@@ -49,6 +50,7 @@
           :placeholder="phonePlaceholder"
           @focus="onPhoneInputFocus"
           @blur="onPhoneInputBlur"
+          @change="onPhoneInputChanged"
         />
         <div
           class="phone-number-container__delete"
@@ -61,7 +63,7 @@
     </div>
     <!-- country code select list container -->
     <div class="country-list-container" v-show="!fold">
-      <recycle-scroller
+      <!-- <recycle-scroller
         :item-size="1"
         :items="countryLists"
         class="scroller"
@@ -85,7 +87,27 @@
             </div>
           </div>
         </template>
-      </recycle-scroller>
+      </recycle-scroller> -->
+      <ol>
+        <li v-for="(item, idx) in countryLists" :key="idx">
+          <div
+            class="country-list-container__list"
+            :class="{ selected: currentCountry === item.iso2 }"
+            @click="updateSelectedCountryCode(item)"
+          >
+            <div class="country-list-container__list-item">
+              <country-flag
+                :country="item.iso2"
+                :size="flagSize"
+                class="flag"
+              />
+            </div>
+            <div class="country-list-container__list-country-name">
+              {{ item.name }}
+            </div>
+          </div>
+        </li>
+      </ol>
     </div>
   </div>
 </template>
@@ -99,14 +121,18 @@ import {
 import examples from "libphonenumber-js/examples.mobile.json";
 
 import CountryFlag from "vue-country-flag";
-import { RecycleScroller } from "vue-virtual-scroller";
-import { countries } from "../assets/js/country-codes.js";
+// import { RecycleScroller } from "vue-virtual-scroller";
+import {
+  COUNTRY_LIST,
+  COUNTRY_NAMES,
+  COUNTRY_DIALCODES
+} from "../assets/js/country-codes.js";
 
 export default {
   name: "PhoneInput",
   components: {
-    CountryFlag,
-    RecycleScroller
+    CountryFlag
+    // RecycleScroller
   },
   props: {
     countryCode: {
@@ -124,7 +150,7 @@ export default {
           dialCode: "cn", // lowercase dial code
           hasFlag: true,
           readonly: false,
-          maxLength: 6
+          maxLength: 4
         };
       }
     },
@@ -143,10 +169,12 @@ export default {
     return {
       examples,
       toggle: false,
-      fold: true, // list 折叠状态
+      // list fold flag
+      fold: true,
+      currentDialCode: "86", // default value
       countryCodeInputFocus: false,
       phoneInputFocus: false,
-      countryLists: countries,
+      countryLists: COUNTRY_LIST,
       currentCountry: this.countryCode,
       flagSize: "normal",
       dialCode: "",
@@ -154,22 +182,30 @@ export default {
       phonePlaceholderPrefix: "e.g. ", // placeholder prefix string
       phoneNum: null,
       showDeleteIcon: false,
-      phonePlaceholder: ""
+      phonePlaceholder: "",
+      countryCodeTimer: null,
+      phoneNumTimer: null
     };
   },
   created() {
+    console.log(COUNTRY_NAMES, COUNTRY_DIALCODES);
     this.phonePlaceholder = this.samplePhoneNumer;
-    this.dialCode = "93";
+    this.dialCode = "86";
   },
   methods: {
     onCountryCodeInput(e) {
+      clearTimeout(this.countryCodeTimer);
       // 当没有值时，使用默认给定的值
-      let rawData = e.target.value;
-      if (rawData) {
-        // 检查rawData开头是数字还是字母
-      } else {
-        // console.log("hi");
-      }
+      this.countryCodeTimer = setTimeout(() => {
+        let rawData = e.target.value;
+        if (rawData) {
+          // 检查rawData开头是数字还是字母
+          // 根据条件改变列表
+          this.searchCountries(rawData);
+        } else {
+          console.log("input data is: ", rawData);
+        }
+      }, 300);
     },
     // 选中时打开列表
     onCountryCodeFocus(event) {
@@ -183,11 +219,12 @@ export default {
       this.$emit("blur");
     },
     onCountryCodeChanged() {
-      // this.$emit("change");
+      console.log("testing ...");
+      this.$emit("change");
     },
     updateSelectedCountryCode(item) {
-      this.dialCode = item.dialCode;
       this.currentCountry = item.iso2;
+      this.currentDialCode = item.dialCode;
       this.isSelected = true;
       this.fold = true;
       this.phonePlaceholder = this.samplePhoneNumer;
@@ -195,9 +232,6 @@ export default {
     handleListToggle() {
       this.countryCodeInputFocus = false;
       this.fold = !this.fold;
-      // if (!this.fold) {
-
-      // }
     },
     removePhoneNumber() {
       this.phoneNum = "";
@@ -209,17 +243,32 @@ export default {
     },
     onPhoneInputBlur() {
       this.phoneInputFocus = false;
+    },
+    onPhoneInputChanged() {},
+    // 查询国家码
+    searchCountries(data, list = COUNTRY_LIST) {
+      let hitCountries = [];
+      if (!isNaN(data)) {
+        // 根据数字查询
+        list.map(item => {
+          if (item.dialCode.indexOf(data) > -1) {
+            hitCountries.push(item);
+          }
+        });
+      } else {
+        // 根据字符串查询
+        list.map(item => {
+          if (item.name.indexOf(data) > -1) {
+            hitCountries.push(item);
+          }
+        });
+      }
+
+      console.log(hitCountries);
+      this.countryLists = hitCountries;
     }
   },
   computed: {
-    currentDialCode: {
-      get() {
-        return this.codePlaceholderPrefix + this.dialCode;
-      },
-      set(val) {
-        return this.codePlaceholderPrefix + val;
-      }
-    },
     samplePhoneNumer() {
       const sampleNum =
         this.phonePlaceholderPrefix +
@@ -236,9 +285,6 @@ export default {
       } else {
         this.showDeleteIcon = true;
       }
-    },
-    defaultDialCode(oldVal, newVal) {
-      console.log(oldVal, newVal, this.dialCode);
     }
   }
 };
@@ -261,8 +307,8 @@ export default {
         padding: 10px 0 0 10px;
       }
       &__input {
-        width: 65px;
-        max-width: 65px;
+        width: 55px;
+        max-width: 55px;
       }
       &__arrow {
         display: block;

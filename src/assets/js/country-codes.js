@@ -299,9 +299,11 @@ const allCountries = [
   ["Åland Islands", "ax", "358", 1]
 ];
 
-export const countriesIso = allCountries.map(country => country[1]);
+export const COUNTRY_NAMES = allCountries.map(country => country[0]);
+export const COUNTRY_ISOS = allCountries.map(country => country[1]);
+export const COUNTRY_DIALCODES = allCountries.map(country => country[2]);
 
-export const countries = allCountries.map(country => ({
+export const COUNTRY_LIST = allCountries.map(country => ({
   name: country[0],
   iso2: country[1],
   dialCode: country[2],
