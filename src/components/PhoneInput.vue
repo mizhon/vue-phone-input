@@ -16,13 +16,15 @@
           type="text"
           v-model.trim="currentDialCode"
           class="country-code-container__input"
+          onkeyup="value=value.replace(/\D/g,'')"
           :maxlength="codeOption.maxLength"
           :readonly="codeOption.readonly"
-          onkeyup="value=value.replace(/\D/g,'')"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeInputBlur"
           @change="onCountryCodeChanged"
+          @keydown.enter.prevent="fold = !fold"
+          @keydown.esc.stop.prevent="fold = true"
         />
       </div>
       <div class="country-code-container__arrow" @click="handleListToggle">
@@ -33,7 +35,7 @@
             }); transition: transform .3s;`
           "
           src="../assets/imgs/arrow.svg"
-          alt=""
+          alt="flag"
         />
       </div>
       <!-- fence -->
@@ -62,32 +64,17 @@
       </div>
     </div>
     <!-- country code select list container -->
-    <div class="country-list-container" v-show="!fold">
-      <!-- <recycle-scroller
-        :item-size="1"
-        :items="countryLists"
-        class="scroller"
-        key-field="iso2"
-      >
-        <template v-slot="{ item }">
-          <div
-            class="country-list-container__list"
-            :class="{ selected: currentCountry === item.iso2 }"
-            @click="updateSelectedCountryCode(item)"
-          >
-            <div class="country-list-container__list-item">
-              <country-flag
-                :country="item.iso2"
-                :size="flagSize"
-                class="flag"
-              />
-            </div>
-            <div class="country-list-container__list-country-name">
-              {{ item.name }}
-            </div>
-          </div>
-        </template>
-      </recycle-scroller> -->
+    <div
+      v-if="!fold && countryLists.length > 0"
+      class="country-list-container"
+      :style="
+        `height: ${
+          countryLists.length < 7
+            ? `${countryLists.length * 36}px; overflow: hidden;`
+            : ''
+        }`
+      "
+    >
       <ol>
         <li v-for="(item, idx) in countryLists" :key="idx">
           <div
@@ -109,6 +96,14 @@
         </li>
       </ol>
     </div>
+    <!-- no data condiation -->
+    <div
+      v-if="!fold && countryLists.length === 0"
+      class="country-list-container__empty"
+    >
+      {{ countryCodesEmptyDesc }}
+    </div>
+    <!-- error condition -->
   </div>
 </template>
 <script>
@@ -119,20 +114,14 @@ import {
   getExampleNumber
 } from "libphonenumber-js";
 import examples from "libphonenumber-js/examples.mobile.json";
+import { COUNTRY_LIST } from "../assets/js/country-codes.js";
 
 import CountryFlag from "vue-country-flag";
-// import { RecycleScroller } from "vue-virtual-scroller";
-import {
-  COUNTRY_LIST,
-  COUNTRY_NAMES,
-  COUNTRY_DIALCODES
-} from "../assets/js/country-codes.js";
 
 export default {
   name: "PhoneInput",
   components: {
     CountryFlag
-    // RecycleScroller
   },
   props: {
     countryCode: {
@@ -160,7 +149,7 @@ export default {
         return {
           readonly: false,
           placeholder: "Phone Number",
-          maxLength: 16
+          maxLength: 14
         };
       }
     }
@@ -176,6 +165,7 @@ export default {
       phoneInputFocus: false,
       countryLists: COUNTRY_LIST,
       currentCountry: this.countryCode,
+      countryCodesEmptyDesc: "No data matched",
       flagSize: "normal",
       dialCode: "",
       codePlaceholderPrefix: "+",
@@ -188,7 +178,6 @@ export default {
     };
   },
   created() {
-    console.log(COUNTRY_NAMES, COUNTRY_DIALCODES);
     this.phonePlaceholder = this.samplePhoneNumer;
     this.dialCode = "86";
   },
@@ -199,11 +188,10 @@ export default {
       this.countryCodeTimer = setTimeout(() => {
         let rawData = e.target.value;
         if (rawData) {
-          // 检查rawData开头是数字还是字母
-          // 根据条件改变列表
-          this.searchCountries(rawData);
+          this.countryLists = this.filterCountries(rawData);
+          console.log(this.countryLists);
         } else {
-          console.log("input data is: ", rawData);
+          this.countryLists = COUNTRY_LIST;
         }
       }, 300);
     },
@@ -219,8 +207,8 @@ export default {
       this.$emit("blur");
     },
     onCountryCodeChanged() {
-      console.log("testing ...");
-      this.$emit("change");
+      console.log("country code changed", this.currentDialCode);
+      this.$emit("change", this.currentDialCode);
     },
     updateSelectedCountryCode(item) {
       this.currentCountry = item.iso2;
@@ -228,6 +216,8 @@ export default {
       this.isSelected = true;
       this.fold = true;
       this.phonePlaceholder = this.samplePhoneNumer;
+      // when country selected, countryLists recover to all countries
+      this.countryLists = COUNTRY_LIST;
     },
     handleListToggle() {
       this.countryCodeInputFocus = false;
@@ -245,27 +235,20 @@ export default {
       this.phoneInputFocus = false;
     },
     onPhoneInputChanged() {},
-    // 查询国家码
-    searchCountries(data, list = COUNTRY_LIST) {
+    /**
+     * Filter countries by input dial code
+     */
+    filterCountries(data, list = COUNTRY_LIST) {
       let hitCountries = [];
       if (!isNaN(data)) {
-        // 根据数字查询
+        // filter by dial code
         list.map(item => {
           if (item.dialCode.indexOf(data) > -1) {
             hitCountries.push(item);
           }
         });
-      } else {
-        // 根据字符串查询
-        list.map(item => {
-          if (item.name.indexOf(data) > -1) {
-            hitCountries.push(item);
-          }
-        });
       }
-
-      console.log(hitCountries);
-      this.countryLists = hitCountries;
+      return hitCountries;
     }
   },
   computed: {
@@ -298,7 +281,7 @@ export default {
     border: 1px solid #dcdfe6;
     border-radius: 4px;
     overflow: auto;
-    min-width: 395px;
+    min-width: 365px;
     // country code
     .country-code-container {
       display: flex;
@@ -332,7 +315,7 @@ export default {
       display: flex;
       flex-direction: row;
       &__input {
-        width: 250px;
+        width: 225px;
       }
       &__delete {
         cursor: pointer;
@@ -362,13 +345,12 @@ export default {
   // country-code list container
   .country-list-container {
     position: relative;
-    width: 395px;
+    width: 365px;
     background-color: #fff;
-    height: 217px;
     max-height: 217px;
     border: 1px solid #ebeef5;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     cursor: pointer;
     font-size: 12px;
@@ -376,7 +358,7 @@ export default {
       display: flex;
       justify-content: flex-start;
       align-items: flex-start;
-      padding: 5px 10px;
+      padding: 8px 10px;
       &-item {
         display: flex;
         flex-direction: row;
@@ -388,10 +370,22 @@ export default {
       }
       &-country-name {
         line-height: 20px;
+        padding: 0 5px;
       }
     }
     &__list:hover {
       background-color: #f5f7fa;
+    }
+    &__empty {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 34px;
+      background-color: #fff;
+      border: 1px solid #ebeef5;
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      color: #999;
     }
     .selected,
     .selected:hover {
