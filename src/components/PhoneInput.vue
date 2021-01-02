@@ -2,7 +2,10 @@
   <div class="phone-number-wrapper">
     <div
       class="phone-input-container"
-      :class="{ focused: countryCodeInputFocus || phoneInputFocus || !fold }"
+      :class="[
+        { focused: countryCodeInputFocus || phoneInputFocus || !fold },
+        { error: dialCode === '' || isPhoneNumInvalid }
+      ]"
     >
       <!-- country code input container -->
       <div class="country-code-container">
@@ -24,7 +27,7 @@
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeInputBlur"
           @change="onCountryCodeChanged"
-          @keydown.enter.prevent="fold = !fold"
+          @keydown.enter.prevent="onCountryCodeInputEnterPressed"
           @keydown.esc.stop.prevent="fold = true"
         />
       </div>
@@ -41,24 +44,27 @@
       </div>
       <!-- fence -->
       <div class="fence"></div>
-      <!-- phone number input container -->
       <div class="phone-number-container">
+        <!-- ! maxlength do not work when input type='number' -->
         <input
           ref="phoneNumberInput"
-          v-model.trim="phoneNum"
-          type="number"
+          type="text"
           class="phone-number-container__input"
-          :maxlength="phoneOption.maxLength"
-          :disabled="phoneOption.disabled"
+          onkeyup="value=value.replace(/\D/g,'')"
+          v-model.trim="phoneNum"
           :readonly="phoneOption.readonly"
+          :disabled="phoneOption.disabled"
+          :maxlength="phoneOption.maxLength"
           :placeholder="phonePlaceholder"
+          @input="onPhoneNumInput"
           @focus="onPhoneInputFocus"
           @blur="onPhoneInputBlur"
           @change="onPhoneInputChanged"
+          @keydown.enter.prevent="onPhoneInputEnterPressed"
         />
         <div
           class="phone-number-container__delete"
-          :class="[showDeleteIcon ? 'show' : 'hidden']"
+          :class="[showPhoneDeleteIcon ? 'show' : 'hidden']"
           @click="removePhoneNumber"
         >
           <img src="../assets/imgs/delete.svg" alt="" />
@@ -136,6 +142,10 @@ export default {
       type: Boolean,
       default: true
     },
+    clearable: {
+      type: Boolean,
+      default: true
+    },
     codeOption: {
       type: Object,
       default: function() {
@@ -151,11 +161,11 @@ export default {
     phoneOption: {
       type: Object,
       default: function() {
+        // maxlength do not work when input type='number'
         return {
           disabled: false,
           readonly: false,
-          placeholder: "Phone Number",
-          maxLength: 14,
+          maxLength: 17,
           prefix: "e.g. "
         };
       }
@@ -176,11 +186,12 @@ export default {
       currentCountry: this.countryCode,
       countryCodesEmptyDesc: "No data matched",
       flagSize: "normal",
-      phoneNum: null,
-      showDeleteIcon: false,
-      phonePlaceholder: "",
       countryCodeTimer: null,
-      phoneNumTimer: null
+      phoneNum: "",
+      phonePlaceholder: "",
+      phoneNumTimer: null,
+      isPhoneNumInvalid: false,
+      showPhoneDeleteIcon: false
     };
   },
   created() {
@@ -219,11 +230,20 @@ export default {
     onCountryCodeChanged() {
       this.$emit("change", this.currentDialCode);
     },
+    onCountryCodeInputEnterPressed() {
+      this.fold = !this.fold;
+      if (this.fold && this.dialCode !== "") {
+        console.log("testing ", this.dialCode);
+      } else {
+        console.log("--->", this.dialCode);
+        // set error info style
+      }
+    },
     updateSelectedCountryCode(item) {
+      this.fold = true;
+      this.isSelected = true;
       this.currentCountry = item.iso2;
       this.currentDialCode = item.dialCode;
-      this.isSelected = true;
-      this.fold = true;
       this.phonePlaceholder = this.samplePhoneNumer;
       // when country selected, countryLists recover to all countries
       this.countryLists = COUNTRY_LIST;
@@ -231,10 +251,27 @@ export default {
     handleListToggle() {
       this.countryCodeInputFocus = false;
       this.fold = !this.fold;
+      // this.isPhoneNumInvalid = false;
     },
     removePhoneNumber() {
       this.phoneNum = "";
-      this.showDeleteIcon = true;
+      this.showPhoneDeleteIcon = true;
+    },
+    onPhoneNumInput(e) {
+      const exampleNum = getExampleNumber(
+        this.currentCountry.toUpperCase(),
+        examples
+      ).nationalNumber;
+
+      clearTimeout(this.phoneNumTimer);
+      this.phoneNumTimer = setTimeout(() => {
+        let rawData = e.target.value;
+        if (rawData && rawData.length === exampleNum.length) {
+          this.isPhoneNumInvalid = false;
+        } else {
+          this.isPhoneNumInvalid = true;
+        }
+      }, 300);
     },
     onPhoneInputFocus() {
       this.phoneInputFocus = true;
@@ -242,7 +279,24 @@ export default {
     onPhoneInputBlur() {
       this.phoneInputFocus = false;
     },
-    onPhoneInputChanged() {},
+    onPhoneInputChanged(event) {
+      // console.log("on phone input changed", this.phoneNum);
+      this.$emit("change", event.target.value);
+    },
+    onPhoneInputEnterPressed() {
+      const exampleNum = getExampleNumber(
+        this.currentCountry.toUpperCase(),
+        examples
+      ).nationalNumber;
+      // phone number validation
+      if (this.phoneNum !== "") {
+        if (this.phoneNum.length === exampleNum.length) {
+          this.isPhoneNumInvalid = false;
+        } else {
+          this.isPhoneNumInvalid = true;
+        }
+      }
+    },
     /**
      * Filter countries by input dial code
      */
@@ -264,6 +318,7 @@ export default {
 
       if (!$el.contains(target)) {
         this.fold = true;
+        this.isPhoneNumInvalid = false;
       }
     }
   },
@@ -293,10 +348,12 @@ export default {
   watch: {
     // eslint-disable-next-line no-unused-vars
     phoneNum(oldVal, newVal) {
-      if (oldVal === null || oldVal === "") {
-        this.showDeleteIcon = false;
-      } else {
-        this.showDeleteIcon = true;
+      if (this.clearable) {
+        if (oldVal === null || oldVal === "") {
+          this.showPhoneDeleteIcon = false;
+        } else {
+          this.showPhoneDeleteIcon = true;
+        }
       }
     }
   }
@@ -371,6 +428,12 @@ export default {
   .focused:hover {
     border: 1px solid #409eff;
   }
+
+  .error,
+  .error:hover {
+    border: 1px solid #f56c6c;
+  }
+
   .country-codes-section {
     position: absolute;
     z-index: 100;
