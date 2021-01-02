@@ -305,7 +305,7 @@ export const COUNTRY_DIALCODES = allCountries.map(country => country[2]);
 
 export const COUNTRY_LIST = allCountries.map(country => ({
   name: country[0],
-  iso2: country[1],
+  iso2: country[1], // country code
   dialCode: country[2],
   priority: country[3] || 0,
   areaCodes: country[4] || null

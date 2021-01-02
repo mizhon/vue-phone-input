@@ -14,11 +14,12 @@
         <input
           ref="countryCodeInput"
           type="text"
-          v-model.trim="currentDialCode"
           class="country-code-container__input"
           onkeyup="value=value.replace(/\D/g,'')"
+          v-model.trim="dialCode"
+          :readonly="!filterable"
+          :disabled="codeOption.disabled"
           :maxlength="codeOption.maxLength"
-          :readonly="codeOption.readonly"
           @input="onCountryCodeInput"
           @focus="onCountryCodeFocus"
           @blur="onCountryCodeInputBlur"
@@ -48,6 +49,7 @@
           type="number"
           class="phone-number-container__input"
           :maxlength="phoneOption.maxLength"
+          :disabled="phoneOption.disabled"
           :readonly="phoneOption.readonly"
           :placeholder="phonePlaceholder"
           @focus="onPhoneInputFocus"
@@ -63,47 +65,49 @@
         </div>
       </div>
     </div>
-    <!-- country code select list container -->
-    <div
-      v-if="!fold && countryLists.length > 0"
-      class="country-list-container"
-      :style="
-        `height: ${
-          countryLists.length < 7
-            ? `${countryLists.length * 36}px; overflow: hidden;`
-            : ''
-        }`
-      "
-    >
-      <ol>
-        <li v-for="(item, idx) in countryLists" :key="idx">
-          <div
-            class="country-list-container__list"
-            :class="{ selected: currentCountry === item.iso2 }"
-            @click="updateSelectedCountryCode(item)"
-          >
-            <div class="country-list-container__list-item">
-              <country-flag
-                :country="item.iso2"
-                :size="flagSize"
-                class="flag"
-              />
+    <!-- country code select list section -->
+    <section class="country-codes-section">
+      <div
+        v-if="!fold && countryLists.length > 0"
+        class="country-list-container"
+        :style="
+          `height: ${
+            countryLists.length < 7
+              ? `${countryLists.length * 36}px; overflow: hidden;`
+              : ''
+          }`
+        "
+      >
+        <ol>
+          <li v-for="(item, idx) in countryLists" :key="idx">
+            <div
+              class="country-list-container__list"
+              :class="{ selected: currentCountry === item.iso2 }"
+              @click="updateSelectedCountryCode(item)"
+            >
+              <div class="country-list-container__list-item">
+                <country-flag
+                  :country="item.iso2"
+                  :size="flagSize"
+                  class="flag"
+                />
+              </div>
+              <div class="country-list-container__list-country-name">
+                {{ item.name }}
+              </div>
             </div>
-            <div class="country-list-container__list-country-name">
-              {{ item.name }}
-            </div>
-          </div>
-        </li>
-      </ol>
-    </div>
-    <!-- no data condiation -->
-    <div
-      v-if="!fold && countryLists.length === 0"
-      class="country-list-container__empty"
-    >
-      {{ countryCodesEmptyDesc }}
-    </div>
-    <!-- error condition -->
+          </li>
+        </ol>
+      </div>
+      <!-- no data condiation -->
+      <div
+        v-if="!fold && countryLists.length === 0"
+        class="country-list-container__empty"
+      >
+        {{ countryCodesEmptyDesc }}
+      </div>
+      <!-- error condition -->
+    </section>
   </div>
 </template>
 <script>
@@ -136,10 +140,11 @@ export default {
       type: Object,
       default: function() {
         return {
-          dialCode: "cn", // lowercase dial code
-          hasFlag: true,
+          disabled: false,
           readonly: false,
-          maxLength: 4
+          hasFlag: true,
+          maxLength: 4,
+          prefix: "+"
         };
       }
     },
@@ -147,29 +152,30 @@ export default {
       type: Object,
       default: function() {
         return {
+          disabled: false,
           readonly: false,
           placeholder: "Phone Number",
-          maxLength: 14
+          maxLength: 14,
+          prefix: "e.g. "
         };
       }
+    },
+    closeOnOutsideClick: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
     return {
       examples,
-      toggle: false,
-      // list fold flag
       fold: true,
-      currentDialCode: "86", // default value
+      dialCode: "",
       countryCodeInputFocus: false,
       phoneInputFocus: false,
       countryLists: COUNTRY_LIST,
       currentCountry: this.countryCode,
       countryCodesEmptyDesc: "No data matched",
       flagSize: "normal",
-      dialCode: "",
-      codePlaceholderPrefix: "+",
-      phonePlaceholderPrefix: "e.g. ", // placeholder prefix string
       phoneNum: null,
       showDeleteIcon: false,
       phonePlaceholder: "",
@@ -179,7 +185,12 @@ export default {
   },
   created() {
     this.phonePlaceholder = this.samplePhoneNumer;
-    this.dialCode = "86";
+    this.dialCode = this.currentDialCode;
+  },
+  mounted() {
+    if (this.closeOnOutsideClick) {
+      document.addEventListener("click", this.clickHandler);
+    }
   },
   methods: {
     onCountryCodeInput(e) {
@@ -206,7 +217,6 @@ export default {
       this.$emit("blur");
     },
     onCountryCodeChanged() {
-      console.log("country code changed", this.currentDialCode);
       this.$emit("change", this.currentDialCode);
     },
     updateSelectedCountryCode(item) {
@@ -225,7 +235,6 @@ export default {
     removePhoneNumber() {
       this.phoneNum = "";
       this.showDeleteIcon = true;
-      console.log("testing ...", this.phoneNum, this.showDeleteIcon);
     },
     onPhoneInputFocus() {
       this.phoneInputFocus = true;
@@ -248,15 +257,37 @@ export default {
         });
       }
       return hitCountries;
+    },
+    clickHandler(event) {
+      const { target } = event;
+      const { $el } = this;
+
+      if (!$el.contains(target)) {
+        this.fold = true;
+      }
     }
   },
   computed: {
     samplePhoneNumer() {
       const sampleNum =
-        this.phonePlaceholderPrefix +
+        this.phoneOption.prefix +
         getExampleNumber(this.currentCountry.toUpperCase(), examples)
           .nationalNumber;
       return sampleNum;
+    },
+    currentDialCode: {
+      get() {
+        let dialCode = "";
+        COUNTRY_LIST.map(item => {
+          if (item.iso2 === this.countryCode) {
+            dialCode = item.dialCode;
+          }
+        });
+        return dialCode;
+      },
+      set(val) {
+        this.dialCode = val;
+      }
     }
   },
   watch: {
@@ -273,8 +304,6 @@ export default {
 </script>
 <style lang="scss" scoped>
 .phone-number-wrapper {
-  display: flex;
-  flex-direction: column;
   .phone-input-container {
     display: flex;
     border: 1px solid #dcdfe6;
@@ -284,21 +313,23 @@ export default {
     // country code
     .country-code-container {
       display: flex;
+      width: 85px;
       cursor: pointer;
       &__flag {
         padding: 10px 0 0 10px;
       }
       &__input {
-        width: 55px;
-        max-width: 55px;
+        width: 50px;
+        max-width: 50px;
       }
       &__arrow {
-        display: block;
-        cursor: pointer;
+        // display: block;
+        width: 26px;
         img {
           position: relative;
+          cursor: pointer;
           top: 12px;
-          left: -8px;
+          left: -2px;
         }
       }
     }
@@ -321,7 +352,7 @@ export default {
         img {
           position: relative;
           top: 12px;
-          left: -8px;
+          left: -2px;
           padding-left: 5px;
         }
       }
@@ -340,57 +371,60 @@ export default {
   .focused:hover {
     border: 1px solid #409eff;
   }
-
-  // country-code list container
-  .country-list-container {
-    position: relative;
+  .country-codes-section {
+    position: absolute;
+    z-index: 100;
     width: 365px;
-    background-color: #fff;
-    max-height: 217px;
-    border: 1px solid #ebeef5;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    overflow-x: hidden;
-    cursor: pointer;
-    font-size: 12px;
-    &__list {
-      display: flex;
-      justify-content: flex-start;
-      align-items: flex-start;
-      padding: 8px 10px;
-      &-item {
-        display: flex;
-        flex-direction: row;
-        padding-right: 10px;
-        .flag,
-        .dial-code {
-          line-height: 20px;
-        }
-      }
-      &-country-name {
-        line-height: 20px;
-        padding: 0 5px;
-      }
-    }
-    &__list:hover {
-      background-color: #f5f7fa;
-    }
-    &__empty {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      line-height: 34px;
+    // country-code list container
+    .country-list-container {
+      position: relative;
       background-color: #fff;
+      max-height: 217px;
       border: 1px solid #ebeef5;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      color: #999;
-    }
-    .selected,
-    .selected:hover {
-      color: #fff;
-      background-color: #409eff;
-      font-weight: 600;
+      overflow-y: auto;
+      overflow-x: hidden;
+      cursor: pointer;
+      font-size: 12px;
+      &__list {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 8px 10px;
+        &-item {
+          display: flex;
+          flex-direction: row;
+          padding-right: 10px;
+          .flag,
+          .dial-code {
+            line-height: 20px;
+          }
+        }
+        &-country-name {
+          line-height: 20px;
+          padding: 0 5px;
+        }
+      }
+      &__list:hover {
+        background-color: #f5f7fa;
+      }
+      &__empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        line-height: 34px;
+        background-color: #fff;
+        border: 1px solid #ebeef5;
+        box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        color: #999;
+      }
+      .selected,
+      .selected:hover {
+        color: #fff;
+        background-color: #409eff;
+        font-weight: 600;
+      }
     }
   }
 }
