@@ -184,7 +184,7 @@ export default {
       phoneInputFocus: false,
       countryLists: COUNTRY_LIST,
       currentCountry: this.countryCode,
-      countryCodesEmptyDesc: "No data matched",
+      countryCodesEmptyDesc: "No country code matched",
       flagSize: "normal",
       countryCodeTimer: null,
       phoneNum: "",
@@ -251,17 +251,13 @@ export default {
     handleListToggle() {
       this.countryCodeInputFocus = false;
       this.fold = !this.fold;
-      // this.isPhoneNumInvalid = false;
     },
     removePhoneNumber() {
       this.phoneNum = "";
       this.showPhoneDeleteIcon = true;
     },
     onPhoneNumInput(e) {
-      const exampleNum = getExampleNumber(
-        this.currentCountry.toUpperCase(),
-        examples
-      ).nationalNumber;
+      const exampleNum = this.getSamplePhoneNumByCountryCode(this.countryCode);
 
       clearTimeout(this.phoneNumTimer);
       this.phoneNumTimer = setTimeout(() => {
@@ -280,7 +276,6 @@ export default {
       this.phoneInputFocus = false;
     },
     onPhoneInputChanged(event) {
-      // console.log("on phone input changed", this.phoneNum);
       this.$emit("change", event.target.value);
     },
     onPhoneInputEnterPressed() {
@@ -312,6 +307,15 @@ export default {
       }
       return hitCountries;
     },
+    /**
+     * 获取country code对应的示例号码
+     */
+    getSamplePhoneNumByCountryCode(code) {
+      const sampleNum = getExampleNumber(code.toUpperCase(), examples)
+        .nationalNumber;
+
+      return sampleNum;
+    },
     clickHandler(event) {
       const { target } = event;
       const { $el } = this;
@@ -326,8 +330,7 @@ export default {
     samplePhoneNumer() {
       const sampleNum =
         this.phoneOption.prefix +
-        getExampleNumber(this.currentCountry.toUpperCase(), examples)
-          .nationalNumber;
+        this.getSamplePhoneNumByCountryCode(this.countryCode);
       return sampleNum;
     },
     currentDialCode: {
