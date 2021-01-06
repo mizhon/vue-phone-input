@@ -19,7 +19,7 @@
   </div>
 </template>
 <script>
-import PhoneInput from "./components/PhoneInput.vue";
+import PhoneInput from "./packages/PhoneInput.vue";
 export default {
   name: "App",
   components: {

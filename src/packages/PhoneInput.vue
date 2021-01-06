@@ -134,6 +134,12 @@ export default {
     CountryFlag
   },
   props: {
+    excluded: {
+      type: Array,
+      default: function() {
+        return [];
+      }
+    },
     countryCode: {
       type: String,
       default: "cn"
@@ -182,8 +188,8 @@ export default {
       dialCode: "",
       countryCodeInputFocus: false,
       phoneInputFocus: false,
-      countryLists: COUNTRY_LIST,
       currentCountry: this.countryCode,
+      countryLists: COUNTRY_LIST,
       countryCodesEmptyDesc: "No country code matched",
       flagSize: "normal",
       countryCodeTimer: null,
@@ -203,20 +209,64 @@ export default {
       document.addEventListener("click", this.clickHandler);
     }
   },
+  computed: {
+    samplePhoneNumer() {
+      const sampleNum =
+        this.phoneOption.prefix +
+        this.getSamplePhoneNumByCountryCode(this.currentCountry);
+      return sampleNum;
+    },
+    currentDialCode: {
+      get() {
+        let dialCode = "";
+        COUNTRY_LIST.map(item => {
+          if (item.iso2 === this.countryCode) {
+            dialCode = item.dialCode;
+          }
+        });
+        return dialCode;
+      },
+      set(val) {
+        this.dialCode = val;
+      }
+    },
+    currentCountryList: {
+      get() {
+        if (this.excluded.length > 0) {
+          return [];
+        } else {
+          return COUNTRY_LIST;
+        }
+      },
+      set(val) {
+        console.log(val);
+        // return val;
+      }
+    }
+  },
+  watch: {
+    // eslint-disable-next-line no-unused-vars
+    phoneNum(oldVal, newVal) {
+      if (this.clearable) {
+        oldVal === null || oldVal === ""
+          ? (this.showPhoneDeleteIcon = false)
+          : (this.showPhoneDeleteIcon = true);
+      }
+    }
+  },
   methods: {
     onCountryCodeInput(e) {
       clearTimeout(this.countryCodeTimer);
-      // 当没有值时，使用默认给定的值
       this.countryCodeTimer = setTimeout(() => {
         let rawData = e.target.value;
         if (rawData) {
           this.countryLists = this.filterCountries(rawData);
         } else {
+          // todo, need to update
           this.countryLists = COUNTRY_LIST;
         }
       }, 300);
     },
-    // 选中时打开列表
     onCountryCodeFocus(event) {
       this.countryCodeInputFocus = true;
       this.fold = false;
@@ -262,11 +312,9 @@ export default {
       clearTimeout(this.phoneNumTimer);
       this.phoneNumTimer = setTimeout(() => {
         let rawData = e.target.value;
-        if (rawData && rawData.length === exampleNum.length) {
-          this.isPhoneNumInvalid = false;
-        } else {
-          this.isPhoneNumInvalid = true;
-        }
+        rawData && rawData.length === exampleNum.length
+          ? (this.isPhoneNumInvalid = false)
+          : (this.isPhoneNumInvalid = true);
       }, 300);
     },
     onPhoneInputFocus() {
@@ -285,17 +333,16 @@ export default {
       ).nationalNumber;
       // phone number validation
       if (this.phoneNum !== "") {
-        if (this.phoneNum.length === exampleNum.length) {
-          this.isPhoneNumInvalid = false;
-        } else {
-          this.isPhoneNumInvalid = true;
-        }
+        this.phoneNum.length === exampleNum.length
+          ? (this.isPhoneNumInvalid = false)
+          : (this.isPhoneNumInvalid = true);
       }
     },
     /**
      * Filter countries by input dial code
      */
     filterCountries(data, list = COUNTRY_LIST) {
+      console.log(data);
       let hitCountries = [];
       if (!isNaN(data)) {
         // filter by dial code
@@ -308,7 +355,7 @@ export default {
       return hitCountries;
     },
     /**
-     * 获取country code对应的示例号码
+     * get country code related sample number
      */
     getSamplePhoneNumByCountryCode(code) {
       const sampleNum = getExampleNumber(code.toUpperCase(), examples)
@@ -323,40 +370,6 @@ export default {
       if (!$el.contains(target)) {
         this.fold = true;
         this.isPhoneNumInvalid = false;
-      }
-    }
-  },
-  computed: {
-    samplePhoneNumer() {
-      const sampleNum =
-        this.phoneOption.prefix +
-        this.getSamplePhoneNumByCountryCode(this.countryCode);
-      return sampleNum;
-    },
-    currentDialCode: {
-      get() {
-        let dialCode = "";
-        COUNTRY_LIST.map(item => {
-          if (item.iso2 === this.countryCode) {
-            dialCode = item.dialCode;
-          }
-        });
-        return dialCode;
-      },
-      set(val) {
-        this.dialCode = val;
-      }
-    }
-  },
-  watch: {
-    // eslint-disable-next-line no-unused-vars
-    phoneNum(oldVal, newVal) {
-      if (this.clearable) {
-        if (oldVal === null || oldVal === "") {
-          this.showPhoneDeleteIcon = false;
-        } else {
-          this.showPhoneDeleteIcon = true;
-        }
       }
     }
   }
