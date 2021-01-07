@@ -2,7 +2,7 @@
   <div id="app">
     <div class="title">Vue Phone Input</div>
     <div class="demo-content">
-      <section class="section">
+      <!-- <section class="section">
         <div class="desc">Basic</div>
         <PhoneInput />
       </section>
@@ -13,6 +13,17 @@
           :filterable="canFilter"
           :clearable="canClear"
           :phone-option="phoneOption"
+        />
+      </section> -->
+      <section class="section">
+        <div class="desc">With exclued countries</div>
+        <PhoneInput
+          :excluded="excludedCountries"
+          :country-code="countryCode3"
+          :filterable="true"
+          :clearable="canClear"
+          :phone-option="phoneOption1"
+          @change="onCountryCodeChanged"
         />
       </section>
     </div>
@@ -27,10 +38,11 @@ export default {
   },
   data() {
     return {
-      countryCode1: "sy",
+      countryCode1: "ao",
+      countryCode2: "ai",
+      countryCode3: "cn",
       canFilter: false,
       canClear: false, // do not display clearable button
-      countryCode2: "us",
       countryCode2Option: {
         disabled: true,
         hasFlag: true
@@ -38,8 +50,18 @@ export default {
       phoneOption: {
         prefix: "example: ",
         maxLength: 14
-      }
+      },
+      phoneOption1: {
+        prefix: "sample: ",
+        maxLength: 14
+      },
+      excludedCountries: ["af", "al", "dz", "as", "ad", "ao", "ai", "ag", "ar"]
     };
+  },
+  methods: {
+    onCountryCodeChanged() {
+      console.log("testing ...", this.countryCode3);
+    }
   }
 };
 </script>

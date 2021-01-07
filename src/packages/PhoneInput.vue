@@ -74,18 +74,18 @@
     <!-- country code select list section -->
     <section class="country-codes-section">
       <div
-        v-if="!fold && countryLists.length > 0"
+        v-if="!fold && finalCountryLists.length > 0"
         class="country-list-container"
         :style="
           `height: ${
-            countryLists.length < 7
-              ? `${countryLists.length * 36}px; overflow: hidden;`
+            finalCountryLists.length < 7
+              ? `${finalCountryLists.length * 36}px; overflow: hidden;`
               : ''
           }`
         "
       >
         <ol>
-          <li v-for="(item, idx) in countryLists" :key="idx">
+          <li v-for="(item, idx) in finalCountryLists" :key="idx">
             <div
               class="country-list-container__list"
               :class="{ selected: currentCountry === item.iso2 }"
@@ -107,7 +107,7 @@
       </div>
       <!-- no data condiation -->
       <div
-        v-if="!fold && countryLists.length === 0"
+        v-if="!fold && finalCountryLists.length === 0"
         class="country-list-container__empty"
       >
         {{ countryCodesEmptyDesc }}
@@ -189,7 +189,7 @@ export default {
       countryCodeInputFocus: false,
       phoneInputFocus: false,
       currentCountry: this.countryCode,
-      countryLists: COUNTRY_LIST,
+      countryLists: [...COUNTRY_LIST],
       countryCodesEmptyDesc: "No country code matched",
       flagSize: "normal",
       countryCodeTimer: null,
@@ -219,7 +219,7 @@ export default {
     currentDialCode: {
       get() {
         let dialCode = "";
-        COUNTRY_LIST.map(item => {
+        this.finalCountryLists.map(item => {
           if (item.iso2 === this.countryCode) {
             dialCode = item.dialCode;
           }
@@ -230,17 +230,17 @@ export default {
         this.dialCode = val;
       }
     },
-    currentCountryList: {
-      get() {
-        if (this.excluded.length > 0) {
-          return [];
-        } else {
-          return COUNTRY_LIST;
-        }
-      },
-      set(val) {
-        console.log(val);
-        // return val;
+    finalCountryLists() {
+      if (this.excluded.length > 0) {
+        const finalArr = [];
+        this.countryLists.filter(item => {
+          if (this.excluded.indexOf(item.iso2) < 0) {
+            finalArr.push(item);
+          }
+        });
+        return finalArr;
+      } else {
+        return this.countryLists;
       }
     }
   },
@@ -259,11 +259,13 @@ export default {
       clearTimeout(this.countryCodeTimer);
       this.countryCodeTimer = setTimeout(() => {
         let rawData = e.target.value;
+        // NOTE: todo here need to verify
+        // console.log("--->", rawData, this.finalCountryLists);
         if (rawData) {
           this.countryLists = this.filterCountries(rawData);
         } else {
           // todo, need to update
-          this.countryLists = COUNTRY_LIST;
+          this.countryLists = this.finalCountryLists;
         }
       }, 300);
     },
@@ -296,7 +298,7 @@ export default {
       this.currentDialCode = item.dialCode;
       this.phonePlaceholder = this.samplePhoneNumer;
       // when country selected, countryLists recover to all countries
-      this.countryLists = COUNTRY_LIST;
+      this.countryLists = this.finalCountryLists;
     },
     handleListToggle() {
       this.countryCodeInputFocus = false;
@@ -342,26 +344,32 @@ export default {
      * Filter countries by input dial code
      */
     filterCountries(data, list = COUNTRY_LIST) {
-      console.log(data);
-      let hitCountries = [];
+      // remove exclued countries
+      if (this.excluded.length > 0) {
+        const arr = [];
+        COUNTRY_LIST.filter(item => {
+          if (this.excluded.indexOf(item.iso2) < 0) {
+            arr.push(item);
+          }
+        });
+        list = arr;
+      }
+      let matchedList = [];
       if (!isNaN(data)) {
         // filter by dial code
         list.map(item => {
           if (item.dialCode.indexOf(data) > -1) {
-            hitCountries.push(item);
+            matchedList.push(item);
           }
         });
       }
-      return hitCountries;
+      return matchedList;
     },
     /**
      * get country code related sample number
      */
     getSamplePhoneNumByCountryCode(code) {
-      const sampleNum = getExampleNumber(code.toUpperCase(), examples)
-        .nationalNumber;
-
-      return sampleNum;
+      return getExampleNumber(code.toUpperCase(), examples).nationalNumber;
     },
     clickHandler(event) {
       const { target } = event;
