@@ -2,19 +2,19 @@
   <div id="app">
     <div class="title">Vue Phone Input</div>
     <div class="demo-content">
-      <!-- <section class="section">
+      <section class="section">
         <div class="desc">Basic</div>
-        <PhoneInput />
+        <PhoneInput :country-code="countryCode1" />
       </section>
       <section class="section">
         <div class="desc">With Options</div>
         <PhoneInput
-          :country-code="countryCode1"
+          :country-code="countryCode2"
           :filterable="canFilter"
           :clearable="canClear"
           :phone-option="phoneOption"
         />
-      </section> -->
+      </section>
       <section class="section">
         <div class="desc">With exclued countries</div>
         <PhoneInput
@@ -40,7 +40,7 @@ export default {
     return {
       countryCode1: "ao",
       countryCode2: "ai",
-      countryCode3: "cn",
+      countryCode3: "kr",
       canFilter: false,
       canClear: false, // do not display clearable button
       countryCode2Option: {
