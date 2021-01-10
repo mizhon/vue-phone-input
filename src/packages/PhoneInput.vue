@@ -230,17 +230,24 @@ export default {
         this.dialCode = val;
       }
     },
-    finalCountryLists() {
-      if (this.excluded.length > 0) {
-        const finalArr = [];
-        this.countryLists.filter(item => {
-          if (this.excluded.indexOf(item.iso2) < 0) {
-            finalArr.push(item);
-          }
-        });
-        return finalArr;
-      } else {
-        return this.countryLists;
+    // NOTE: 需要对finalCountryLists进行赋值操作
+    finalCountryLists: {
+      get() {
+        if (this.excluded.length > 0) {
+          const finalArr = [];
+          this.countryLists.filter(item => {
+            if (this.excluded.indexOf(item.iso2) < 0) {
+              finalArr.push(item);
+            }
+          });
+          return finalArr;
+        } else {
+          console.log("finalCountryLists", this.countryLists);
+          return this.countryLists;
+        }
+      },
+      set(list) {
+        this.countryLists = list;
       }
     }
   },
@@ -260,7 +267,7 @@ export default {
       this.countryCodeTimer = setTimeout(() => {
         let rawData = e.target.value;
         // NOTE: todo here need to verify
-        // console.log("--->", rawData, this.finalCountryLists);
+        console.log("--->", rawData, this.finalCountryLists);
         if (rawData) {
           this.countryLists = this.filterCountries(rawData);
         } else {
