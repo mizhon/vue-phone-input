@@ -1,5 +1,17 @@
 # vue-phone-input
 
+This vue component is inspired by [vue-phone-number-input](https://www.npmjs.com/package/vue-phone-number-input).
+When using it, I found it's not very fit for me, missing places are list below:
+- The countries can't be filterd or exclued
+- The related lib `libphonenumber-js` have [validation issue](https://github.com/LouisMazel/vue-phone-number-input/issues/127).
+- The theme is limited.
+
+So I am trying to cover these functions and create a new one for myself.
+If it is helpful, feel free to use it, or if you find any issue, please fire a bug.
+
+Dependency libs: 
+- [vue-country-flag](https://github.com/P3trur0/vue-country-flag)
+- [libphonenumber-js](https://www.npmjs.com/package/libphonenumber-js)
 ## Project setup
 ```
 npm install
@@ -13,11 +25,6 @@ npm run serve
 ### Compiles and minifies for production
 ```
 npm run build
-```
-
-### Run your unit tests
-```
-npm run test:unit
 ```
 
 ### Lints and fixes files

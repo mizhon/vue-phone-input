@@ -263,11 +263,12 @@ export default {
   },
   methods: {
     onCountryCodeInput(e) {
+      console.log("happened when country code input changed", e.target.value);
       clearTimeout(this.countryCodeTimer);
       this.countryCodeTimer = setTimeout(() => {
         let rawData = e.target.value;
-        // NOTE: todo here need to verify
-        console.log("--->", rawData, this.finalCountryLists);
+        // NOTE:  筛选有问题
+        console.log("onCountryCodeInput --->", this.finalCountryLists);
         if (rawData) {
           this.countryLists = this.filterCountries(rawData);
         } else {

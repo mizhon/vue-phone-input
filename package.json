@@ -12,8 +12,7 @@
     "core-js": "^3.6.5",
     "libphonenumber-js": "^1.9.6",
     "vue": "^2.6.11",
-    "vue-country-flag": "^2.0.3",
-    "vue-virtual-scroller": "^1.0.10"
+    "vue-country-flag": "^2.0.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

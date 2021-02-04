@@ -6,7 +6,7 @@
         <div class="desc">Basic</div>
         <PhoneInput :country-code="countryCode1" />
       </section>
-      <section class="section">
+      <!-- <section class="section">
         <div class="desc">With Options</div>
         <PhoneInput
           :country-code="countryCode2"
@@ -14,7 +14,7 @@
           :clearable="canClear"
           :phone-option="phoneOption"
         />
-      </section>
+      </section> -->
       <section class="section">
         <div class="desc">With exclued countries</div>
         <PhoneInput
