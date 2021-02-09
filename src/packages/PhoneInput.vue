@@ -7,13 +7,13 @@
         { error: dialCode === '' || isPhoneNumInvalid }
       ]"
     >
-      <!-- country code input container -->
+      <!-- country code container -->
       <div class="country-code-container">
-        <!-- flag container-->
+        <!-- flag-->
         <div class="country-code-container__flag" v-if="codeOption.hasFlag">
           <country-flag :country="currentCountry" :size="flagSize" />
         </div>
-        <!-- input container -->
+        <!-- code input -->
         <input
           ref="countryCodeInput"
           type="text"
@@ -44,6 +44,7 @@
       </div>
       <!-- fence -->
       <div class="fence"></div>
+      <!-- number container -->
       <div class="phone-number-container">
         <!-- ! maxlength do not work when input type='number' -->
         <input
@@ -242,7 +243,7 @@ export default {
           });
           return finalArr;
         } else {
-          console.log("finalCountryLists", this.countryLists);
+          // console.log("finalCountryLists", this.countryLists);
           return this.countryLists;
         }
       },
